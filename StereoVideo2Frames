@@ -1,0 +1,407 @@
+#include <iostream>
+#include <stdio.h>
+#include <opencv2/opencv.hpp>
+#include <fstream>
+#include <string>
+
+#define CAL_FILENAME_EXTRINSICS "camera_extrinsic.txt"
+#define CAL_FILENAME_LEFT_INTRINSICS "Left_Camera_Calibration_Intrinsic.txt"
+#define CAL_FILENAME_RIGHT_INTRINSICS "Right_Camera_Calibration_Intrinsic.txt"
+#define STEREO_VIDEO_FILENAME "stereo.avi"
+#define TARGET_ORBSLAM_DATA_FOLDERNAME "data_ORBSLAM2"
+#define TARGET_TIMESTAMPS_FOLDERNAME "data_TIMESTAMPS"
+
+
+using namespace std;
+using namespace cv;
+
+int main (int argc, char **argv)
+{
+
+    //Char declaration for sprintfs
+
+    char video_filename[1000];
+    char cam0_filename[1000];
+    char cam1_filename[1000];
+
+    char orbslam_timestamps_folder[1000];
+    char orbslam_data_folder[1000];
+    char orbslam_data_folder_cam0[1000];
+    char orbslam_data_folder_cam1[1000];
+
+    char left_cam_intrin_file_path[1000];
+    char right_cam_intrin_file_path[1000];
+    char extrinsics_file_path[1000];
+    char yaml_to_data_dir[1000];
+    char hamlyn_data_path[1000];
+
+    //data path obtent.
+
+    sprintf(hamlyn_data_path,"%s",argv[1]);
+
+    string hamlyn_data_path_str(hamlyn_data_path);//working on string
+    int hamlyn_data_path_size(hamlyn_data_path_str.size());
+    string hamlyn_data_path_cortado_str(hamlyn_data_path_str.substr(7,hamlyn_data_path_size)); //taking out "file://"
+
+    cout<<hamlyn_data_path<<endl;
+    cout<< "Tamaño del Data Path " <<hamlyn_data_path_size<<endl;//checking the string's (also char's since we are on C++) size
+    cout<<"Data path cortado "<<hamlyn_data_path_cortado_str<<endl;//chekcing that "file://"isn't there anymore
+
+    const char* hamlyn_data_path_cortado_char = hamlyn_data_path_cortado_str.c_str();//back to char
+
+    //creating left and right frame folders
+
+    sprintf(orbslam_data_folder,"mkdir %s%s",hamlyn_data_path_cortado_char,TARGET_ORBSLAM_DATA_FOLDERNAME);
+    sprintf(orbslam_data_folder_cam0,"mkdir %s%s/camara0",hamlyn_data_path_cortado_char,TARGET_ORBSLAM_DATA_FOLDERNAME);
+    sprintf(orbslam_data_folder_cam1,"mkdir %s%s/camara1",hamlyn_data_path_cortado_char,TARGET_ORBSLAM_DATA_FOLDERNAME);
+
+    system(orbslam_data_folder);
+    system(orbslam_data_folder_cam0);
+    system(orbslam_data_folder_cam1);
+
+
+    std::cout << "cam0 and cam1 dir created into data folder" << std::endl;
+
+
+    //Video croping and saving
+
+    std::cout << "Starting crop" << std::endl;
+
+    if (argc !=2)
+    {
+        std::cout << "USAGE: " << argv[0] << " <video-filename>" << std::endl;
+        return 1;
+    }
+
+    //creating string for video reading
+    sprintf(video_filename,"%s%s",argv[1],STEREO_VIDEO_FILENAME);
+    //cout<<video_filename<<endl;
+    cv::VideoCapture cap(video_filename);
+    if (!cap.isOpened())
+    {
+        std::cerr << "ERROR: Could not open video " << argv[1] << std::endl;
+        return 1;
+    }
+
+    int frame_count = 0;
+    bool should_stop = false;
+
+    while(!should_stop)
+    {
+        cv::Mat frame;
+        cap >> frame; //get a new frame from the video
+
+        if (frame.empty())
+        {
+            should_stop = true; 
+            //check if we are at the end of the video
+            cap.set(CV_CAP_PROP_POS_AVI_RATIO,0);//resetting the video-reading pointer
+            break;
+        }
+
+        int rows = frame.rows;
+        int cols = frame.cols;
+
+        int colsResto = cols%2;
+        if (colsResto != 0)
+        {
+            std::cout << "Error: Imagen con anchura impar" << std::endl;
+            break;
+        }
+
+        int colsMid=cols/2; //std:div may be better??
+    
+
+
+        // cv::namedWindow( "Frame", CV_WINDOW_AUTOSIZE );// Create a window for display.
+        // cv::imshow( "Frame", frame );
+
+
+        cv::Mat frameLeft = cv::Mat(frame, cv::Rect(0,0,cols/2-1,rows)).clone();
+        cv::Mat frameRight = cv::Mat(frame, cv::Rect(cols/2,0,cols-cols/2,rows)).clone();
+
+        // cv::namedWindow( "Frame Right", CV_WINDOW_AUTOSIZE );// Create a window for display.
+        // cv::imshow( "Frame Right", frameRight );
+        // cv::namedWindow( "Frame Left", CV_WINDOW_AUTOSIZE );// Create a window for display.
+        // cv::imshow( "Frame Left", frameLeft );
+
+
+        sprintf(cam0_filename,"%s%s/camara0/%06d.png",hamlyn_data_path_cortado_char,TARGET_ORBSLAM_DATA_FOLDERNAME,frame_count); //Write formatted data to string
+        sprintf(cam1_filename,"%s%s/camara1/%06d.png",hamlyn_data_path_cortado_char,TARGET_ORBSLAM_DATA_FOLDERNAME,frame_count);
+
+        // cout<<cam0_filename<<endl;
+        // cout<<cam1_filename<<endl;
+
+        cv::imwrite(cam0_filename, frameLeft);
+        cv::imwrite(cam1_filename, frameRight);
+        // cv::imwrite(PathFrameRight, frameRight);
+
+
+        //creación de los timestamps
+
+         // sprintf(orbslam_timestamps_folder,"mkdir %s%s",hamlyn_data_path_cortado_char,TARGET_TIMESTAMPS_FOLDERNAME);
+         // system(orbslam_timestamps_folder);
+
+         char creacion_archivo_timestamps[1000];
+         char timestamps_frame_count[1000];
+
+         sprintf(creacion_archivo_timestamps,"%s%s/test.txt",hamlyn_data_path_cortado_char,TARGET_TIMESTAMPS_FOLDERNAME);
+         sprintf(timestamps_frame_count,"%06d",frame_count);
+
+
+         std::ofstream outfile (creacion_archivo_timestamps);
+
+         outfile << timestamps_frame_count << std::endl;
+
+         outfile.close();
+
+         frame_count++;
+
+    }
+
+    //obtain more data
+
+
+    cv::Mat frame1;
+    cap >> frame1;
+    int rows = frame1.rows;
+    int cols = frame1.cols;
+
+    std::cout << "Image width :" << cols << " pixels" << std::endl;
+    std::cout << "Image height :" << rows << " pixels" << std::endl;
+
+    std::cout << "Image width/2 -1 : = " << cols/2 -1 << " pixels" << std::endl;
+    std::cout << "Image width/2 : " << cols/2 << " pixels" << std::endl;
+
+    int width = cols/2;
+    int height = rows;
+
+    //
+
+    std::cout << "Cropping done" << std::endl;
+
+
+    //Text file .yaml creation
+    //Strings for text file reading/writing
+
+    sprintf(left_cam_intrin_file_path,"%s%s",hamlyn_data_path_cortado_char,CAL_FILENAME_LEFT_INTRINSICS);
+    sprintf(right_cam_intrin_file_path,"%s%s",hamlyn_data_path_cortado_char,CAL_FILENAME_RIGHT_INTRINSICS);
+    sprintf(extrinsics_file_path,"%s%s",hamlyn_data_path_cortado_char,CAL_FILENAME_EXTRINSICS);
+    sprintf(yaml_to_data_dir,"%s/hamlyn.yaml",hamlyn_data_path_cortado_char);
+
+    ifstream left_camera_intrin(left_cam_intrin_file_path),right_camera_intrin(right_cam_intrin_file_path),camera_extrin(extrinsics_file_path);
+
+    string word;
+    std::ofstream hamlyn_yaml (yaml_to_data_dir);
+
+
+    hamlyn_yaml << "%YAML:1.0" << std::endl;
+    hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
+    hamlyn_yaml << "# Camera parameters" << std::endl;
+    hamlyn_yaml << "# Camera calibration and distortion parameters (OpenCV)" << std::endl;
+
+    hamlyn_yaml << "Camera.fx: " << endl;
+    hamlyn_yaml << "Camera.fy: " << endl;
+    hamlyn_yaml << "Camera.cx: " << endl;
+    hamlyn_yaml << "Camera.cy: " << endl;
+
+    hamlyn_yaml << "Camera.k1: 0" << endl;
+    hamlyn_yaml << "Camera.k2: 0" << endl;
+    hamlyn_yaml << "Camera.p1: 0" << endl;
+    hamlyn_yaml << "Camera.p2: 0" << endl;
+
+    hamlyn_yaml << "Camera.width: " << width <<endl;
+    hamlyn_yaml << "Camera.height: " << height <<endl;
+
+    hamlyn_yaml << "# Camera frames per second " << std::endl;
+    hamlyn_yaml << "Camera.fps: 20" << endl;
+
+
+    hamlyn_yaml << "# stereo baseline times fx" << std::endl;
+    for (int n=12; n>2; n--) 
+    {
+        camera_extrin>> word;
+        if (n==3)
+        {
+        hamlyn_yaml << "Camera.bf: " << word << endl;
+        }
+    }
+
+
+    hamlyn_yaml << "# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)" << std::endl;
+    hamlyn_yaml << "Camera.RGB: " << endl;
+
+    hamlyn_yaml << "# Close/Far threshold. Baseline times." << std::endl;
+    hamlyn_yaml << "ThDepth: " << endl;
+
+    hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
+    hamlyn_yaml << "# Stereo Rectification. Only if you need to pre-rectify the images." << std::endl;
+    hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
+
+    left_camera_intrin.clear();  //file pointer position reset
+    left_camera_intrin.seekg( 0 );
+
+    right_camera_intrin.clear();  //file pointer position reset
+    right_camera_intrin.seekg( 0 );
+
+    camera_extrin.clear();  //file pointer position reset
+    camera_extrin.seekg( 0 );
+
+
+    hamlyn_yaml << "intrin.L: !!opencv-matrix" << endl;
+    hamlyn_yaml << "   rows: 3" << endl;
+    hamlyn_yaml << "   cols: 3" << endl;
+    hamlyn_yaml << "   dt: d" << endl;
+    hamlyn_yaml << "   data:[";
+
+
+    for (int n=9; n>0; n--) 
+    {
+        left_camera_intrin >> word;
+        hamlyn_yaml << word;
+        if (n>1)
+        {
+        hamlyn_yaml << ", ";
+        }
+    }
+    hamlyn_yaml << "]"<< endl;
+
+    hamlyn_yaml << "# Camera: left distortion coef" << std::endl;
+
+    hamlyn_yaml << "DistortCoef.L: !!opencv-matrix" << endl;
+    hamlyn_yaml << "   rows: 1" << endl;
+    hamlyn_yaml << "   cols: 4" << endl;
+    hamlyn_yaml << "   dt: d" << endl;
+    hamlyn_yaml << "   data:[";
+
+    for (int n=4; n>0; n--) 
+    {
+        left_camera_intrin >> word;
+        hamlyn_yaml << word;
+        if (n>1)
+        {
+        hamlyn_yaml << ", ";
+        }
+    }
+    hamlyn_yaml << "]"<< endl;
+
+    hamlyn_yaml << "# Camera: right intrinsics" << std::endl;
+
+    hamlyn_yaml << "intrin.R: !!opencv-matrix" << endl;
+    hamlyn_yaml << "   rows: 3" << endl;
+    hamlyn_yaml << "   cols: 3" << endl;
+    hamlyn_yaml << "   dt: d" << endl;
+    hamlyn_yaml << "   data:[";
+
+
+    for (int n=9; n>0; n--) 
+    {
+        right_camera_intrin >> word;
+        hamlyn_yaml << word;
+        if (n>1)
+        {
+        hamlyn_yaml << ", ";
+        }
+    }
+    hamlyn_yaml << "]"<< endl;
+
+    hamlyn_yaml << "# Camera: right distortion coef" << std::endl;
+
+    hamlyn_yaml << "DistortCoef.R: !!opencv-matrix" << endl;
+    hamlyn_yaml << "   rows: 1" << endl;
+    hamlyn_yaml << "   cols: 4" << endl;
+    hamlyn_yaml << "   dt: d" << endl;
+    hamlyn_yaml << "   data:[";
+
+    for (int n=4; n>0; n--) 
+    {
+        right_camera_intrin >> word;
+        hamlyn_yaml << word;
+        if (n>1)
+        {
+        hamlyn_yaml << ", ";
+        }
+    }
+    hamlyn_yaml << "]"<< endl;
+    
+    hamlyn_yaml << "# R matrix" << std::endl;
+
+    hamlyn_yaml << "R.matrix: !!opencv-matrix" << endl;
+    hamlyn_yaml << "   rows: 3" << endl;
+    hamlyn_yaml << "   cols: 3" << endl;
+    hamlyn_yaml << "   dt: d" << endl;
+    hamlyn_yaml << "   data:[";
+
+    for (int n=9; n>0; n--) 
+    {
+        camera_extrin >> word;
+        hamlyn_yaml << word;
+        if (n>1)
+        {
+        hamlyn_yaml << ", ";
+        }
+    }
+    hamlyn_yaml << "]"<< endl;
+
+    hamlyn_yaml << "# T matrix" << std::endl;
+
+    hamlyn_yaml << "T.matrix: !!opencv-matrix" << endl;
+    hamlyn_yaml << "   rows: 3" << endl;
+    hamlyn_yaml << "   cols: 1" << endl;
+    hamlyn_yaml << "   dt: d" << endl;
+    hamlyn_yaml << "   data:[";
+
+    for (int n=3; n>0; n--) 
+    {
+        camera_extrin >> word;
+        hamlyn_yaml << word;
+        if (n>1)
+        {
+        hamlyn_yaml << ", ";
+        }
+    }
+    hamlyn_yaml << "]"<< endl;
+
+    hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
+    hamlyn_yaml << "# ORB Parameters" << std::endl;
+    hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
+
+    hamlyn_yaml << "# ORB Extractor: Number of features per image" << std::endl;
+    hamlyn_yaml << "ORBextractor.nFeatures: " << endl;
+
+    hamlyn_yaml << "# ORB Extractor: Scale factor between levels in the scale pyramid   " << std::endl;
+    hamlyn_yaml << "ORBextractor.scaleFactor: " << endl;
+
+    hamlyn_yaml << "# ORB Extractor: Number of levels in the scale pyramid" << std::endl;
+    hamlyn_yaml << "ORBextractor.nLevels: " << endl;
+
+    hamlyn_yaml << "# ORB Extractor: Fast threshold" << std::endl;
+    hamlyn_yaml << "ORBextractor.iniThFAST: " << endl;
+    hamlyn_yaml << "ORBextractor.minThFAST: " << endl;
+
+    hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
+    hamlyn_yaml << "# Viewer Parameters" << std::endl;
+    hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
+
+    hamlyn_yaml << "Viewer.KeyFrameSize: " << endl;
+    hamlyn_yaml << "Viewer.KeyFrameLineWidth: " << endl;
+    hamlyn_yaml << "Viewer.GraphLineWidth: " << endl;
+    hamlyn_yaml << "Viewer.PointSize: " << endl;
+    hamlyn_yaml << "OViewer.CameraSize: " << endl;
+    hamlyn_yaml << "Viewer.CameraLineWidth: " << endl;
+    hamlyn_yaml << "Viewer.ViewpointX: " << endl;
+    hamlyn_yaml << "Viewer.ViewpointY: " << endl;
+    hamlyn_yaml << "Viewer.ViewpointZ: " << endl;
+    hamlyn_yaml << "Viewer.ViewpointF: " << endl;
+
+    cout << " dtfile has the data" << endl;
+
+    left_camera_intrin.close();
+    right_camera_intrin.close();
+    camera_extrin.close();
+    hamlyn_yaml.close();
+
+
+    cout << "StereoVideo2Frames : Succed" << std::endl;
+    return 0;
+}
