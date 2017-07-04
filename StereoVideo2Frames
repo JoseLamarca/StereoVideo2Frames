@@ -386,29 +386,106 @@ int main (int argc, char **argv)
     double cyrect = P1.at<double>(1,2);
     double baseLineTimesfrect = P2.at<double>(0,3);
 
+    hamlyn_yaml << std::setprecision(8)<<"RIGHT.height: "<< height <<endl;
+    hamlyn_yaml << std::setprecision(8)<<"RIGHT.width: "<< width <<endl;
+
+    hamlyn_yaml << std::setprecision(8)<< "LEFT.height: "<< height <<endl;
+    hamlyn_yaml << std::setprecision(8)<<"LEFT.width: "<< width <<endl;
+
+    // cv::FileStorage fs(yaml_to_data_dir, cv::FileStorage::WRITE);
+
+    // fs << "LEFTR" << R1;
+
+    // fs.release();
+
     hamlyn_yaml << "LEFT.R:  !!opencv-matrix" << endl;//R that relates right camera from left camera pov.
     hamlyn_yaml << "   rows: 3" << endl;
     hamlyn_yaml << "   cols: 3" << endl;
     hamlyn_yaml << "   dt: d" << endl;
-    hamlyn_yaml << "   data: "<< R1 <<endl;
+    hamlyn_yaml << "   data:[";
+
+    // double AuxMatrixVal = R1.at<double>(0,0);
+    // cout<<setprecision(19)<<AuxMatrixVal<<endl;
+
+    for (int i=0; i<3; i++) 
+    {
+            for (int j=0; j<3; j++) 
+            {   
+                double AuxMatrixVal = R1.at<double>(i,j);
+                //cout<<setprecision(19)<<AuxMatrixVal<<endl;
+                hamlyn_yaml << std::setprecision(19)<< AuxMatrixVal;
+                if (!((i==2)&&(j==2)))
+                {
+                    hamlyn_yaml << ", ";
+                }
+            }
+    }
+    hamlyn_yaml << "]"<< endl;
 
     hamlyn_yaml << "RIGHT.R:  !!opencv-matrix" << endl;//R that relates right camera from left camera pov.
     hamlyn_yaml << "   rows: 3" << endl;
     hamlyn_yaml << "   cols: 3" << endl;
     hamlyn_yaml << "   dt: d" << endl;
-    hamlyn_yaml << "   data: "<< R2 <<endl;
+    hamlyn_yaml << "   data:[";
 
-    hamlyn_yaml << "RIGHT.P:  !!opencv-matrix" << endl;//R that relates right camera from left camera pov.
-    hamlyn_yaml << "   rows: 3" << endl;
-    hamlyn_yaml << "   cols: 4" << endl;
-    hamlyn_yaml << "   dt: d" << endl;
-    hamlyn_yaml << "   data: "<< P1 <<endl;
+    for (int i=0; i<3; i++) 
+    {
+            for (int j=0; j<3; j++) 
+            {   
+                double AuxMatrixVal = R2.at<double>(i,j);
+                //cout<<setprecision(19)<<AuxMatrixVal<<endl;
+                hamlyn_yaml << std::setprecision(19)<< AuxMatrixVal;
+                if (!((i==2)&&(j==2)))
+                {
+                    hamlyn_yaml << ", ";
+                }
+            }
+    }
+    hamlyn_yaml << "]"<< endl;
+
+
 
     hamlyn_yaml << "LEFT.P:  !!opencv-matrix" << endl;//R that relates right camera from left camera pov.
     hamlyn_yaml << "   rows: 3" << endl;
     hamlyn_yaml << "   cols: 4" << endl;
     hamlyn_yaml << "   dt: d" << endl;
-    hamlyn_yaml << "   data: "<< P2 <<endl;
+    hamlyn_yaml << "   data:[";
+
+    for (int i=0; i<3; i++) 
+    {
+            for (int j=0; j<4; j++) 
+            {   
+                double AuxMatrixVal = P1.at<double>(i,j);
+                //cout<<setprecision(19)<<AuxMatrixVal<<endl;
+                hamlyn_yaml << std::setprecision(19)<< AuxMatrixVal;
+                if (!((i==2)&&(j==3)))
+                {
+                    hamlyn_yaml << ", ";
+                }
+            }
+    }
+    hamlyn_yaml << "]"<< endl;
+
+    hamlyn_yaml << "RIGHT.P:  !!opencv-matrix" << endl;//R that relates right camera from left camera pov.
+    hamlyn_yaml << "   rows: 3" << endl;
+    hamlyn_yaml << "   cols: 4" << endl;
+    hamlyn_yaml << "   dt: d" << endl;
+    hamlyn_yaml << "   data:[";
+
+    for (int i=0; i<3; i++) 
+    {
+            for (int j=0; j<4; j++) 
+            {   
+                double AuxMatrixVal = P2.at<double>(i,j);
+                //cout<<setprecision(19)<<AuxMatrixVal<<endl;
+                hamlyn_yaml << std::setprecision(19)<< AuxMatrixVal;
+                if (!((i==2)&&(j==3)))
+                {
+                    hamlyn_yaml << ", ";
+                }
+            }
+    }
+    hamlyn_yaml << "]"<< endl;
 
 
     hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
