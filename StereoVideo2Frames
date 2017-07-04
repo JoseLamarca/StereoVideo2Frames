@@ -522,7 +522,7 @@ int main (int argc, char **argv)
     hamlyn_yaml << "# Close/Far threshold. Baseline times." << std::endl;
     hamlyn_yaml << "ThDepth: 35" << endl;
 
-     hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
+    hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
     hamlyn_yaml << "# ORB Parameters" << std::endl;
     hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
 
@@ -562,3 +562,4 @@ int main (int argc, char **argv)
     cout << "StereoVideo2Frames : Succed" << std::endl;
     return 0;
 }
+
