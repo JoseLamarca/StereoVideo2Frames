@@ -3,6 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include <fstream>
 #include <string>
+#include <iomanip>  // std::setprecision
 
 #define CAL_FILENAME_EXTRINSICS "camera_extrinsic.txt"
 #define CAL_FILENAME_LEFT_INTRINSICS "Left_Camera_Calibration_Intrinsic.txt"
@@ -170,8 +171,8 @@ int main (int argc, char **argv)
     std::cout << "Image width :" << cols << " pixels" << std::endl;
     std::cout << "Image height :" << rows << " pixels" << std::endl;
 
-    std::cout << "Image width/2 -1 : = " << cols/2 -1 << " pixels" << std::endl;
-    std::cout << "Image width/2 : " << cols/2 << " pixels" << std::endl;
+    // std::cout << "Image width/2 -1 : = " << cols/2 -1 << " pixels" << std::endl;
+    // std::cout << "Image width/2 : " << cols/2 << " pixels" << std::endl;
 
     int width = cols/2;
     int height = rows;
@@ -187,7 +188,11 @@ int main (int argc, char **argv)
     sprintf(left_cam_intrin_file_path,"%s%s",hamlyn_data_path_cortado_char,CAL_FILENAME_LEFT_INTRINSICS);
     sprintf(right_cam_intrin_file_path,"%s%s",hamlyn_data_path_cortado_char,CAL_FILENAME_RIGHT_INTRINSICS);
     sprintf(extrinsics_file_path,"%s%s",hamlyn_data_path_cortado_char,CAL_FILENAME_EXTRINSICS);
-    sprintf(yaml_to_data_dir,"%s/hamlyn.yaml",hamlyn_data_path_cortado_char);
+    sprintf(yaml_to_data_dir,"%shamlyn.yaml",hamlyn_data_path_cortado_char);
+
+
+
+    cout << "archivo yaml: " << yaml_to_data_dir << endl;
 
     ifstream left_camera_intrin(left_cam_intrin_file_path),right_camera_intrin(right_cam_intrin_file_path),camera_extrin(extrinsics_file_path);
 
@@ -196,43 +201,6 @@ int main (int argc, char **argv)
 
 
     hamlyn_yaml << "%YAML:1.0" << std::endl;
-    hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
-    hamlyn_yaml << "# Camera parameters" << std::endl;
-    hamlyn_yaml << "# Camera calibration and distortion parameters (OpenCV)" << std::endl;
-
-    hamlyn_yaml << "Camera.fx: " << endl;
-    hamlyn_yaml << "Camera.fy: " << endl;
-    hamlyn_yaml << "Camera.cx: " << endl;
-    hamlyn_yaml << "Camera.cy: " << endl;
-
-    hamlyn_yaml << "Camera.k1: 0" << endl;
-    hamlyn_yaml << "Camera.k2: 0" << endl;
-    hamlyn_yaml << "Camera.p1: 0" << endl;
-    hamlyn_yaml << "Camera.p2: 0" << endl;
-
-    hamlyn_yaml << "Camera.width: " << width <<endl;
-    hamlyn_yaml << "Camera.height: " << height <<endl;
-
-    hamlyn_yaml << "# Camera frames per second " << std::endl;
-    hamlyn_yaml << "Camera.fps: 20" << endl;
-
-
-    hamlyn_yaml << "# stereo baseline times fx" << std::endl;
-    for (int n=12; n>2; n--) 
-    {
-        camera_extrin>> word;
-        if (n==3)
-        {
-        hamlyn_yaml << "Camera.bf: " << word << endl;
-        }
-    }
-
-
-    hamlyn_yaml << "# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)" << std::endl;
-    hamlyn_yaml << "Camera.RGB: " << endl;
-
-    hamlyn_yaml << "# Close/Far threshold. Baseline times." << std::endl;
-    hamlyn_yaml << "ThDepth: " << endl;
 
     hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
     hamlyn_yaml << "# Stereo Rectification. Only if you need to pre-rectify the images." << std::endl;
@@ -248,7 +216,7 @@ int main (int argc, char **argv)
     camera_extrin.seekg( 0 );
 
 
-    hamlyn_yaml << "intrin.L: !!opencv-matrix" << endl;
+    hamlyn_yaml << "LEFT.K: !!opencv-matrix" << endl;
     hamlyn_yaml << "   rows: 3" << endl;
     hamlyn_yaml << "   cols: 3" << endl;
     hamlyn_yaml << "   dt: d" << endl;
@@ -268,7 +236,7 @@ int main (int argc, char **argv)
 
     hamlyn_yaml << "# Camera: left distortion coef" << std::endl;
 
-    hamlyn_yaml << "DistortCoef.L: !!opencv-matrix" << endl;
+    hamlyn_yaml << "LEFT.D: !!opencv-matrix" << endl;
     hamlyn_yaml << "   rows: 1" << endl;
     hamlyn_yaml << "   cols: 4" << endl;
     hamlyn_yaml << "   dt: d" << endl;
@@ -287,7 +255,7 @@ int main (int argc, char **argv)
 
     hamlyn_yaml << "# Camera: right intrinsics" << std::endl;
 
-    hamlyn_yaml << "intrin.R: !!opencv-matrix" << endl;
+    hamlyn_yaml << "RIGHT.K: !!opencv-matrix" << endl;
     hamlyn_yaml << "   rows: 3" << endl;
     hamlyn_yaml << "   cols: 3" << endl;
     hamlyn_yaml << "   dt: d" << endl;
@@ -307,7 +275,7 @@ int main (int argc, char **argv)
 
     hamlyn_yaml << "# Camera: right distortion coef" << std::endl;
 
-    hamlyn_yaml << "DistortCoef.R: !!opencv-matrix" << endl;
+    hamlyn_yaml << "RIGHT.D: !!opencv-matrix" << endl;
     hamlyn_yaml << "   rows: 1" << endl;
     hamlyn_yaml << "   cols: 4" << endl;
     hamlyn_yaml << "   dt: d" << endl;
@@ -326,7 +294,7 @@ int main (int argc, char **argv)
     
     hamlyn_yaml << "# R matrix" << std::endl;
 
-    hamlyn_yaml << "R.matrix: !!opencv-matrix" << endl;
+    hamlyn_yaml << "R.matrix: !!opencv-matrix" << endl;//R that relates right camera from left camera pov.
     hamlyn_yaml << "   rows: 3" << endl;
     hamlyn_yaml << "   cols: 3" << endl;
     hamlyn_yaml << "   dt: d" << endl;
@@ -345,7 +313,7 @@ int main (int argc, char **argv)
 
     hamlyn_yaml << "# T matrix" << std::endl;
 
-    hamlyn_yaml << "T.matrix: !!opencv-matrix" << endl;
+    hamlyn_yaml << "T.matrix: !!opencv-matrix" << endl;//Postion of right camera from left camera's pov.
     hamlyn_yaml << "   rows: 3" << endl;
     hamlyn_yaml << "   cols: 1" << endl;
     hamlyn_yaml << "   dt: d" << endl;
@@ -362,45 +330,157 @@ int main (int argc, char **argv)
     }
     hamlyn_yaml << "]"<< endl;
 
+   
+
+    cout << " dtfile has the data" << endl;
+
+
+    //StereoRectify to add Camera Parameters
+
+    cv::Mat camMatrix1, distCoef1, camMatrix2, distCoef2, imageSize, R, T;
+    cv::Mat R1,R2,P1,P2,Q;
+
+    cv::FileStorage fsSettings(yaml_to_data_dir, cv::FileStorage::READ);
+    if(!fsSettings.isOpened())
+    {
+        cerr << "ERROR: Wrong path to settings" << endl;
+        return -1;
+    }
+
+    fsSettings["LEFT.K"] >> camMatrix1;
+    fsSettings["RIGHT.K"] >> camMatrix2;
+
+    fsSettings["LEFT.D"] >> distCoef1;
+    fsSettings["RIGHT.D"] >> distCoef2;
+
+    fsSettings["R.matrix"] >> R;
+    fsSettings["T.matrix"] >> T;
+
+    fsSettings.release();
+
+    cout << "intrin.L = "<< endl << " "  << camMatrix1 << endl << endl;
+    cout << "intrin.R = "<< endl << " "  << camMatrix2 << endl << endl;
+    cout << "DistortCoef.L = "<< endl << " "  << distCoef1 << endl << endl;
+    cout << "DistortCoef.R = "<< endl << " "  << distCoef2 << endl << endl;
+    cout << "R.matrix = "<< endl << " "  << R << endl << endl;
+    cout << "T.matrix = "<< endl << " "  << T << endl << endl;
+
+    cout << "Camera.height = "<< endl << " "  << rows << endl << endl;
+    cout << "Camera.width = "<< endl << " "  << cols << endl << endl;
+
+    
+
+    cv::stereoRectify(camMatrix1,distCoef1,camMatrix2,distCoef2,cv::Size(width,height),R,T,R1,R2,P1,P2,Q,CV_CALIB_ZERO_DISPARITY,-1,Size(320,240),0,0);
+
+    cout << "Valores de salida de cv::stereoRectify: "<< endl;
+
+    cout << "R1 = "<< endl << " "  << R1 << endl << endl;
+    cout << "R2 = "<< endl << " "  << R2 << endl << endl;
+    cout << "P1 = "<< endl << " "  << P1 << endl << endl;
+    cout << "P2 = "<< endl << " "  << P2 << endl << endl;
+    cout << "Q = "<< endl << " "  << Q << endl << endl;
+
+    // cout << "tipo P1 :" << P1.type() << endl;
+    double frect = P1.at<double>(0,0);
+    double cxrect = P1.at<double>(0,2);
+    double cyrect = P1.at<double>(1,2);
+    double baseLineTimesfrect = P2.at<double>(0,3);
+
+    hamlyn_yaml << "LEFT.R:  !!opencv-matrix" << endl;//R that relates right camera from left camera pov.
+    hamlyn_yaml << "   rows: 3" << endl;
+    hamlyn_yaml << "   cols: 3" << endl;
+    hamlyn_yaml << "   dt: d" << endl;
+    hamlyn_yaml << "   data: "<< R1 <<endl;
+
+    hamlyn_yaml << "RIGHT.R:  !!opencv-matrix" << endl;//R that relates right camera from left camera pov.
+    hamlyn_yaml << "   rows: 3" << endl;
+    hamlyn_yaml << "   cols: 3" << endl;
+    hamlyn_yaml << "   dt: d" << endl;
+    hamlyn_yaml << "   data: "<< R2 <<endl;
+
+    hamlyn_yaml << "RIGHT.P:  !!opencv-matrix" << endl;//R that relates right camera from left camera pov.
+    hamlyn_yaml << "   rows: 3" << endl;
+    hamlyn_yaml << "   cols: 4" << endl;
+    hamlyn_yaml << "   dt: d" << endl;
+    hamlyn_yaml << "   data: "<< P1 <<endl;
+
+    hamlyn_yaml << "LEFT.P:  !!opencv-matrix" << endl;//R that relates right camera from left camera pov.
+    hamlyn_yaml << "   rows: 3" << endl;
+    hamlyn_yaml << "   cols: 4" << endl;
+    hamlyn_yaml << "   dt: d" << endl;
+    hamlyn_yaml << "   data: "<< P2 <<endl;
+
+
     hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
+    hamlyn_yaml << "# Camera parameters" << std::endl;
+    hamlyn_yaml << "# Camera calibration and distortion parameters (OpenCV)" << std::endl;
+
+
+    hamlyn_yaml <<std::setprecision(10)<< "Camera.fx: " <<frect << endl;
+    hamlyn_yaml <<std::setprecision(10)<<  "Camera.fy: " <<frect <<endl;
+    hamlyn_yaml <<std::setprecision(10)<<  "Camera.cx: " <<cxrect<<endl;
+    hamlyn_yaml <<std::setprecision(10)<<  "Camera.cy: " <<cyrect <<endl;
+
+    hamlyn_yaml << "Camera.k1: 0.0" << endl;
+    hamlyn_yaml << "Camera.k2: 0.0" << endl;
+    hamlyn_yaml << "Camera.p1: 0.0" << endl;
+    hamlyn_yaml << "Camera.p2: 0.0" << endl;
+
+    hamlyn_yaml << "Camera.width: " << width <<endl;
+    hamlyn_yaml << "Camera.height: " << height <<endl;
+
+    hamlyn_yaml << "# Camera frames per second " << std::endl;
+    hamlyn_yaml << "Camera.fps: 20" << endl;
+
+
+    hamlyn_yaml << "# stereo baseline times fx" << std::endl;
+
+    hamlyn_yaml <<std::setprecision(19)<< "Camera.bf: " << baseLineTimesfrect << endl;
+
+
+
+    hamlyn_yaml << "# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)" << std::endl;
+    hamlyn_yaml << "Camera.RGB: 1" << endl;
+
+    hamlyn_yaml << "# Close/Far threshold. Baseline times." << std::endl;
+    hamlyn_yaml << "ThDepth: 35" << endl;
+
+     hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
     hamlyn_yaml << "# ORB Parameters" << std::endl;
     hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
 
     hamlyn_yaml << "# ORB Extractor: Number of features per image" << std::endl;
-    hamlyn_yaml << "ORBextractor.nFeatures: " << endl;
+    hamlyn_yaml << "ORBextractor.nFeatures: 1200" << endl;
 
     hamlyn_yaml << "# ORB Extractor: Scale factor between levels in the scale pyramid   " << std::endl;
-    hamlyn_yaml << "ORBextractor.scaleFactor: " << endl;
+    hamlyn_yaml << "ORBextractor.scaleFactor: 1.2" << endl;
 
     hamlyn_yaml << "# ORB Extractor: Number of levels in the scale pyramid" << std::endl;
-    hamlyn_yaml << "ORBextractor.nLevels: " << endl;
+    hamlyn_yaml << "ORBextractor.nLevels: 8" << endl;
 
     hamlyn_yaml << "# ORB Extractor: Fast threshold" << std::endl;
-    hamlyn_yaml << "ORBextractor.iniThFAST: " << endl;
-    hamlyn_yaml << "ORBextractor.minThFAST: " << endl;
+    hamlyn_yaml << "ORBextractor.iniThFAST: 20" << endl;
+    hamlyn_yaml << "ORBextractor.minThFAST: 7" << endl;
 
     hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
     hamlyn_yaml << "# Viewer Parameters" << std::endl;
     hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
 
-    hamlyn_yaml << "Viewer.KeyFrameSize: " << endl;
-    hamlyn_yaml << "Viewer.KeyFrameLineWidth: " << endl;
-    hamlyn_yaml << "Viewer.GraphLineWidth: " << endl;
-    hamlyn_yaml << "Viewer.PointSize: " << endl;
-    hamlyn_yaml << "OViewer.CameraSize: " << endl;
-    hamlyn_yaml << "Viewer.CameraLineWidth: " << endl;
-    hamlyn_yaml << "Viewer.ViewpointX: " << endl;
-    hamlyn_yaml << "Viewer.ViewpointY: " << endl;
-    hamlyn_yaml << "Viewer.ViewpointZ: " << endl;
-    hamlyn_yaml << "Viewer.ViewpointF: " << endl;
-
-    cout << " dtfile has the data" << endl;
+    hamlyn_yaml << "Viewer.KeyFrameSize: 0.05" << endl;
+    hamlyn_yaml << "Viewer.KeyFrameLineWidth: 1" << endl;
+    hamlyn_yaml << "Viewer.GraphLineWidth: 0.9" << endl;
+    hamlyn_yaml << "Viewer.PointSize: 2" << endl;
+    hamlyn_yaml << "OViewer.CameraSize: 0.08" << endl;
+    hamlyn_yaml << "Viewer.CameraLineWidth: 3" << endl;
+    hamlyn_yaml << "Viewer.ViewpointX: 0" << endl;
+    hamlyn_yaml << "Viewer.ViewpointY: -0.7" << endl;
+    hamlyn_yaml << "Viewer.ViewpointZ: -1.8" << endl;
+    hamlyn_yaml << "Viewer.ViewpointF: 500" << endl;
 
     left_camera_intrin.close();
     right_camera_intrin.close();
     camera_extrin.close();
     hamlyn_yaml.close();
-
 
     cout << "StereoVideo2Frames : Succed" << std::endl;
     return 0;
