@@ -370,7 +370,7 @@ int main (int argc, char **argv)
 
     
 
-    cv::stereoRectify(camMatrix1,distCoef1,camMatrix2,distCoef2,cv::Size(width,height),R,T,R1,R2,P1,P2,Q,CV_CALIB_ZERO_DISPARITY,-1,Size(320,240),0,0);
+    cv::stereoRectify(camMatrix1,distCoef1,camMatrix2,distCoef2,cv::Size(width,height),R,T,R1,R2,P1,P2,Q,0,-1,Size(),0,0);
 
     cout << "Valores de salida de cv::stereoRectify: "<< endl;
 
@@ -562,4 +562,3 @@ int main (int argc, char **argv)
     cout << "StereoVideo2Frames : Succed" << std::endl;
     return 0;
 }
-
