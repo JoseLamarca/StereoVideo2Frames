@@ -366,7 +366,7 @@ int main (int argc, char **argv)
     cout << "Camera.width = "<< endl << " "  << cols << endl << endl;
 
     cv::Size sz;
-    cv::stereoRectify(camMatrix1,distCoef1,camMatrix2,distCoef2,cv::Size(width,height),R,T,R1,R2,P1,P2,Q,0,-1,sz,0,0);
+    cv::stereoRectify(camMatrix1,distCoef1,camMatrix2,distCoef2,cv::Size(width,height),R,T,R1,R2,P1,P2,Q,CV_CALIB_ZERO_DISPARITY,-1,sz,0,0);
 
     // cout<< Size << endl;
 
@@ -513,7 +513,16 @@ int main (int argc, char **argv)
 
     hamlyn_yaml << "# stereo baseline times fx" << std::endl;
 
-    hamlyn_yaml <<std::setprecision(19)<< "Camera.bf: " << baseLineTimesfrect << endl;
+    if (baseLineTimesfrect>0)
+     {
+        hamlyn_yaml <<std::setprecision(19)<< "Camera.bf: " << baseLineTimesfrect << endl;
+     }
+     else
+     {
+        hamlyn_yaml <<std::setprecision(19)<< "Camera.bf: " << (-1)*baseLineTimesfrect << endl;
+     }
+        
+   
 
 
 
@@ -564,4 +573,3 @@ int main (int argc, char **argv)
     cout << "StereoVideo2Frames : Succed" << std::endl;
     return 0;
 }
-
