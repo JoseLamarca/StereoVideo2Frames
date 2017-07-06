@@ -52,17 +52,16 @@ int main (int argc, char **argv)
 
     //creating left and right frame folders
 
-    sprintf(orbslam_data_folder,"mkdir %s%s",hamlyn_data_path_cortado_char,TARGET_ORBSLAM_DATA_FOLDERNAME);
-    sprintf(orbslam_data_folder_cam0,"mkdir %s%s/camara0",hamlyn_data_path_cortado_char,TARGET_ORBSLAM_DATA_FOLDERNAME);
-    sprintf(orbslam_data_folder_cam1,"mkdir %s%s/camara1",hamlyn_data_path_cortado_char,TARGET_ORBSLAM_DATA_FOLDERNAME);
+    // sprintf(orbslam_data_folder,"mkdir %s%s",hamlyn_data_path_cortado_char,TARGET_ORBSLAM_DATA_FOLDERNAME);
+    sprintf(orbslam_data_folder_cam0,"mkdir %scamara0",hamlyn_data_path_cortado_char);
+    sprintf(orbslam_data_folder_cam1,"mkdir %scamara1",hamlyn_data_path_cortado_char);
 
-    system(orbslam_data_folder);
+    // system(orbslam_data_folder);
     system(orbslam_data_folder_cam0);
     system(orbslam_data_folder_cam1);
 
 
     std::cout << "cam0 and cam1 dir created into data folder" << std::endl;
-
 
     //Video croping and saving
 
@@ -84,8 +83,22 @@ int main (int argc, char **argv)
         return 1;
     }
 
+
+
     int frame_count = 0;
     bool should_stop = false;
+
+    //archivo Timestamps (times.txt)
+
+    char creacion_archivo_timestamps[1000];
+    char timestamps_frame_count[1000];
+
+    sprintf(creacion_archivo_timestamps,"%s/times.txt",hamlyn_data_path_cortado_char);
+    sprintf(timestamps_frame_count,"%06d",frame_count);
+
+    std::ofstream timestamps_file(creacion_archivo_timestamps);
+
+
 
     while(!should_stop)
     {
@@ -127,8 +140,8 @@ int main (int argc, char **argv)
         // cv::imshow( "Frame Left", frameLeft );
 
 
-        sprintf(cam0_filename,"%s%s/camara0/%06d.png",hamlyn_data_path_cortado_char,TARGET_ORBSLAM_DATA_FOLDERNAME,frame_count); //Write formatted data to string
-        sprintf(cam1_filename,"%s%s/camara1/%06d.png",hamlyn_data_path_cortado_char,TARGET_ORBSLAM_DATA_FOLDERNAME,frame_count);
+        sprintf(cam0_filename,"%scamara0/%06d.png",hamlyn_data_path_cortado_char,frame_count); //Write formatted data to string
+        sprintf(cam1_filename,"%scamara1/%06d.png",hamlyn_data_path_cortado_char,frame_count);
 
         // cout<<cam0_filename<<endl;
         // cout<<cam1_filename<<endl;
@@ -140,21 +153,12 @@ int main (int argc, char **argv)
 
         //creación de los timestamps
 
-         // sprintf(orbslam_timestamps_folder,"mkdir %s%s",hamlyn_data_path_cortado_char,TARGET_TIMESTAMPS_FOLDERNAME);
-         // system(orbslam_timestamps_folder);
+        timestamps_file<<setfill('0') << setw(6)<<frame_count << endl;
 
-         char creacion_archivo_timestamps[1000];
-         char timestamps_frame_count[1000];
-
-         sprintf(creacion_archivo_timestamps,"%s%s/test.txt",hamlyn_data_path_cortado_char,TARGET_TIMESTAMPS_FOLDERNAME);
-         sprintf(timestamps_frame_count,"%06d",frame_count);
+        // sprintf(orbslam_timestamps_folder,"mkdir %s%s",hamlyn_data_path_cortado_char,TARGET_TIMESTAMPS_FOLDERNAME);
+        // system(orbslam_timestamps_folder);
 
 
-         std::ofstream outfile (creacion_archivo_timestamps);
-
-         outfile << timestamps_frame_count << std::endl;
-
-         outfile.close();
 
          frame_count++;
 
@@ -177,10 +181,7 @@ int main (int argc, char **argv)
     int width = cols/2;
     int height = rows;
 
-    //
-
     std::cout << "Cropping done" << std::endl;
-
 
     //Text file .yaml creation
     //Strings for text file reading/writing
@@ -189,8 +190,6 @@ int main (int argc, char **argv)
     sprintf(right_cam_intrin_file_path,"%s%s",hamlyn_data_path_cortado_char,CAL_FILENAME_RIGHT_INTRINSICS);
     sprintf(extrinsics_file_path,"%s%s",hamlyn_data_path_cortado_char,CAL_FILENAME_EXTRINSICS);
     sprintf(yaml_to_data_dir,"%shamlyn.yaml",hamlyn_data_path_cortado_char);
-
-
 
     cout << "archivo yaml: " << yaml_to_data_dir << endl;
 
@@ -215,13 +214,11 @@ int main (int argc, char **argv)
     camera_extrin.clear();  //file pointer position reset
     camera_extrin.seekg( 0 );
 
-
     hamlyn_yaml << "LEFT.K: !!opencv-matrix" << endl;
     hamlyn_yaml << "   rows: 3" << endl;
     hamlyn_yaml << "   cols: 3" << endl;
     hamlyn_yaml << "   dt: d" << endl;
     hamlyn_yaml << "   data:[";
-
 
     for (int n=9; n>0; n--) 
     {
@@ -368,9 +365,13 @@ int main (int argc, char **argv)
     cout << "Camera.height = "<< endl << " "  << rows << endl << endl;
     cout << "Camera.width = "<< endl << " "  << cols << endl << endl;
 
-    
+    cv::Size sz;
+    cv::stereoRectify(camMatrix1,distCoef1,camMatrix2,distCoef2,cv::Size(width,height),R,T,R1,R2,P1,P2,Q,0,-1,sz,0,0);
 
-    cv::stereoRectify(camMatrix1,distCoef1,camMatrix2,distCoef2,cv::Size(width,height),R,T,R1,R2,P1,P2,Q,0,-1,Size(),0,0);
+    // cout<< Size << endl;
+
+    cout<<"sz:  "<<sz.height<<endl;
+
 
     cout << "Valores de salida de cv::stereoRectify: "<< endl;
 
@@ -558,7 +559,9 @@ int main (int argc, char **argv)
     right_camera_intrin.close();
     camera_extrin.close();
     hamlyn_yaml.close();
+    timestamps_file.close();
 
     cout << "StereoVideo2Frames : Succed" << std::endl;
     return 0;
 }
+
