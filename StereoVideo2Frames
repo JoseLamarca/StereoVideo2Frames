@@ -38,7 +38,7 @@ int main (int argc, char **argv)
 
     //data path obtent.
 
-    sprintf(hamlyn_data_path,"%s",argv[1]);
+    sprintf(hamlyn_data_path,"%s/",argv[1]);
 
     string hamlyn_data_path_str(hamlyn_data_path);//working on string
     int hamlyn_data_path_size(hamlyn_data_path_str.size());
@@ -65,7 +65,7 @@ int main (int argc, char **argv)
 
     //Video croping and saving
 
-    std::cout << "Starting crop" << std::endl;
+    std::cout << "Cropping and frame-saving to separated folders in process..." << std::endl;
 
     if (argc !=2)
     {
@@ -74,7 +74,7 @@ int main (int argc, char **argv)
     }
 
     //creating string for video reading
-    sprintf(video_filename,"%s%s",argv[1],STEREO_VIDEO_FILENAME);
+    sprintf(video_filename,"%s/%s",argv[1],STEREO_VIDEO_FILENAME);
     //cout<<video_filename<<endl;
     cv::VideoCapture cap(video_filename);
     if (!cap.isOpened())
@@ -172,7 +172,7 @@ int main (int argc, char **argv)
     int rows = frame1.rows;
     int cols = frame1.cols;
 
-    std::cout << "Image width :" << cols << " pixels" << std::endl;
+    std::cout << "Image width :" << cols/2 << " pixels" << std::endl;
     std::cout << "Image height :" << rows << " pixels" << std::endl;
 
     // std::cout << "Image width/2 -1 : = " << cols/2 -1 << " pixels" << std::endl;
@@ -363,7 +363,7 @@ int main (int argc, char **argv)
     cout << "T.matrix = "<< endl << " "  << T << endl << endl;
 
     cout << "Camera.height = "<< endl << " "  << rows << endl << endl;
-    cout << "Camera.width = "<< endl << " "  << cols << endl << endl;
+    cout << "Camera.width = "<< endl << " "  << cols/2 << endl << endl;
 
     cv::Size sz;
     cv::stereoRectify(camMatrix1,distCoef1,camMatrix2,distCoef2,cv::Size(width,height),R,T,R1,R2,P1,P2,Q,CV_CALIB_ZERO_DISPARITY,-1,sz,0,0);
@@ -553,11 +553,11 @@ int main (int argc, char **argv)
     hamlyn_yaml << "# Viewer Parameters" << std::endl;
     hamlyn_yaml << "#--------------------------------------------------------------------------------------------" << std::endl;
 
-    hamlyn_yaml << "Viewer.KeyFrameSize: 0.05" << endl;
+    hamlyn_yaml << "Viewer.KeyFrameSize: 0.2" << endl;
     hamlyn_yaml << "Viewer.KeyFrameLineWidth: 1" << endl;
     hamlyn_yaml << "Viewer.GraphLineWidth: 0.9" << endl;
     hamlyn_yaml << "Viewer.PointSize: 2" << endl;
-    hamlyn_yaml << "OViewer.CameraSize: 0.08" << endl;
+    hamlyn_yaml << "Viewer.CameraSize: 4" << endl;
     hamlyn_yaml << "Viewer.CameraLineWidth: 3" << endl;
     hamlyn_yaml << "Viewer.ViewpointX: 0" << endl;
     hamlyn_yaml << "Viewer.ViewpointY: -0.7" << endl;
@@ -573,3 +573,4 @@ int main (int argc, char **argv)
     cout << "StereoVideo2Frames : Succed" << std::endl;
     return 0;
 }
+
